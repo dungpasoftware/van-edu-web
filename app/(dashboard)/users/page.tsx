@@ -53,8 +53,8 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -76,8 +76,8 @@ export default function UsersPage() {
       });
 
       if (search) params.append('search', search);
-      if (roleFilter) params.append('role', roleFilter);
-      if (statusFilter) params.append('status', statusFilter);
+      if (roleFilter && roleFilter !== 'all') params.append('role', roleFilter);
+      if (statusFilter && statusFilter !== 'all') params.append('status', statusFilter);
 
       const response = await fetch(`/api/users?${params}`);
       const data: ApiResponse<User[]> = await response.json();
@@ -111,7 +111,7 @@ export default function UsersPage() {
       } else {
         toast.error(t('common.error'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('common.error'));
     }
   };
@@ -135,7 +135,7 @@ export default function UsersPage() {
       } else {
         toast.error(t('common.error'));
       }
-    } catch (error) {
+    } catch {
       toast.error(t('common.error'));
     }
   };
@@ -282,7 +282,7 @@ export default function UsersPage() {
                     <SelectValue placeholder="All Roles" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Roles</SelectItem>
+                    <SelectItem value="all">All Roles</SelectItem>
                     <SelectItem value="student">Student</SelectItem>
                     <SelectItem value="instructor">Instructor</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
@@ -293,7 +293,7 @@ export default function UsersPage() {
                     <SelectValue placeholder="All Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Status</SelectItem>
+                    <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="active">{t('common.status.active')}</SelectItem>
                     <SelectItem value="inactive">{t('common.status.inactive')}</SelectItem>
                   </SelectContent>
