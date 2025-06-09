@@ -1,0 +1,399 @@
+# VanEdu Admin Dashboard - Cursor Rules
+
+## Project Overview
+This is a professional admin dashboard for the VanEdu online course platform built with Next.js 15, TypeScript, and shadcn/ui. It supports internationalization (EN/VI), dark/light themes, and provides comprehensive management features for users, courses, payments, and subscriptions.
+
+## Tech Stack & Architecture
+- **Framework**: Next.js 15 (App Router)
+- **Language**: TypeScript (strict mode)
+- **UI Library**: shadcn/ui with Tailwind CSS
+- **State Management**: React Context (Auth, i18n, Theme)
+- **Internationalization**: react-i18next
+- **Charts**: Recharts
+- **Icons**: Lucide React
+- **Notifications**: Sonner
+- **Forms**: React Hook Form + Zod (when implemented)
+
+## File Structure & Naming Conventions
+
+### Directory Structure
+```
+app/
+├── (auth)/                 # Auth routes group
+├── (dashboard)/            # Protected dashboard routes
+├── api/                    # API endpoints
+├── globals.css             # Global styles
+├── layout.tsx              # Root layout
+└── page.tsx                # Home page
+
+components/
+├── auth/                   # Authentication components
+├── layout/                 # Layout components
+├── providers/              # Context providers
+└── ui/                     # shadcn/ui components
+
+lib/
+├── i18n/                   # Internationalization config
+└── utils.ts                # Utility functions
+
+public/locales/             # Translation files
+types/                      # TypeScript definitions
+```
+
+### Naming Conventions
+- **Files**: kebab-case for files and folders (`user-profile.tsx`, `api-client.ts`)
+- **Components**: PascalCase (`UserProfile`, `DashboardLayout`)
+- **Functions**: camelCase (`fetchUsers`, `handleSubmit`)
+- **Constants**: UPPER_SNAKE_CASE (`API_BASE_URL`, `DEFAULT_LOCALE`)
+- **Types/Interfaces**: PascalCase (`User`, `ApiResponse`)
+
+## Code Style & Patterns
+
+### Component Structure
+```typescript
+"use client" // Only when needed (client components)
+
+import React from 'react';
+import { ExternalLibrary } from 'external-library';
+import { InternalComponent } from '../internal/component';
+import { useCustomHook } from '../../hooks/useCustomHook';
+import { ComponentProps } from '../../types';
+
+interface Props {
+  // Define props interface locally if simple
+  // Or import from types/ if shared
+}
+
+export function ComponentName({ prop1, prop2 }: Props) {
+  // 1. Hooks first
+  const { data, loading } = useCustomHook();
+  
+  // 2. State
+  const [state, setState] = useState(initialValue);
+  
+  // 3. Effects
+  useEffect(() => {
+    // effect logic
+  }, [dependencies]);
+  
+  // 4. Event handlers
+  const handleEvent = (param: string) => {
+    // handler logic
+  };
+  
+  // 5. Early returns
+  if (loading) return <LoadingComponent />;
+  if (error) return <ErrorComponent />;
+  
+  // 6. Render
+  return (
+    <div className="space-y-6">
+      {/* Component JSX */}
+    </div>
+  );
+}
+```
+
+### API Patterns
+```typescript
+// API Route Structure
+import { NextRequest, NextResponse } from 'next/server';
+import { EntityType, ApiResponse } from '../../../types';
+
+export async function GET(request: NextRequest) {
+  try {
+    // Implementation
+    const response: ApiResponse<EntityType[]> = {
+      data: results,
+      meta: paginationMeta,
+    };
+    return NextResponse.json(response);
+  } catch {
+    return NextResponse.json(
+      { message: 'Error message' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+### Error Handling
+- Always use try-catch blocks in API routes
+- Remove unused error variables: `} catch {` instead of `} catch (error) {`
+- Use toast notifications for user feedback
+- Provide meaningful error messages
+
+### Async Operations
+```typescript
+const fetchData = async () => {
+  setLoading(true);
+  try {
+    const response = await fetch('/api/endpoint');
+    const data: ApiResponse<Type[]> = await response.json();
+    setData(data.data);
+  } catch {
+    toast.error(t('common.error'));
+  } finally {
+    setLoading(false);
+  }
+};
+```
+
+## Internationalization Guidelines
+
+### Translation Keys
+- Use nested keys: `users.title`, `common.actions.save`
+- Keep keys descriptive and hierarchical
+- Use consistent naming across languages
+
+### Using Translations
+```typescript
+const { t } = useI18n();
+
+// Basic usage
+<h1>{t('users.title')}</h1>
+
+// With interpolation (when needed)
+<p>{t('users.itemCount', { count: users.length })}</p>
+
+// Status translations
+<Badge>{t(`common.status.${status}`)}</Badge>
+```
+
+### Adding New Translations
+1. Add to both `public/locales/en/common.json` and `public/locales/vi/common.json`
+2. Keep the same structure in both files
+3. Test with both languages
+
+## UI/UX Guidelines
+
+### Component Usage
+- Use shadcn/ui components consistently
+- Apply proper loading states with `<Skeleton />` components
+- Use `<Card />` for content grouping
+- Implement proper responsive design with Tailwind breakpoints
+
+### Loading States
+```typescript
+{loading ? (
+  <Skeleton className="h-4 w-[120px]" />
+) : (
+  <span>{actualContent}</span>
+)}
+```
+
+### Responsive Design
+- Mobile-first approach
+- Use Tailwind responsive prefixes: `sm:`, `md:`, `lg:`
+- Test on mobile, tablet, and desktop viewports
+
+### Toast Notifications
+```typescript
+// Success
+toast.success(t('users.userAdded'));
+
+// Error
+toast.error(t('common.error'));
+
+// Use specific messages when possible
+toast.error('Invalid credentials. Use admin@vanedu.com / admin123');
+```
+
+## TypeScript Guidelines
+
+### Type Definitions
+- Define types in `types/index.ts` for shared types
+- Use interfaces for object shapes
+- Use type unions for specific value sets
+- Export all types that might be reused
+
+### API Response Types
+```typescript
+interface ApiResponse<T> {
+  data: T;
+  meta?: PaginationMeta;
+  message?: string;
+}
+```
+
+### Component Props
+```typescript
+interface ComponentProps {
+  required: string;
+  optional?: number;
+  callback: (param: string) => void;
+  children?: React.ReactNode;
+}
+```
+
+## Authentication & Route Protection
+
+### Protected Routes
+- Wrap dashboard pages with `<RouteGuard>`
+- Use `useAuth()` hook for user state
+- Redirect unauthenticated users to login
+
+### Auth Context Usage
+```typescript
+const { user, login, logout, isLoading } = useAuth();
+
+// Check auth state
+if (!user) {
+  // Handle unauthenticated state
+}
+```
+
+## Data Fetching Patterns
+
+### Client-Side Fetching
+```typescript
+useEffect(() => {
+  fetchData();
+}, [filters, page]); // Include dependencies
+```
+
+### API Integration
+- Use mock APIs during development
+- Structure endpoints to match real backend
+- Include proper error handling and loading states
+
+## Performance Guidelines
+
+### Optimization
+- Use `"use client"` directive only when necessary
+- Implement proper loading states
+- Use React.memo for expensive components (when needed)
+- Lazy load components when appropriate
+
+### Bundle Size
+- Import only needed components: `import { Button } from '@/components/ui/button'`
+- Avoid importing entire libraries when only specific functions are needed
+
+## Dashboard-Specific Patterns
+
+### Layout Structure
+```typescript
+<RouteGuard>
+  <DashboardLayout>
+    <div className="space-y-6">
+      {/* Page header */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">{t('page.title')}</h1>
+        <p className="text-muted-foreground">Description</p>
+      </div>
+      
+      {/* Page content */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Section Title</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Content */}
+        </CardContent>
+      </Card>
+    </div>
+  </DashboardLayout>
+</RouteGuard>
+```
+
+### Table Patterns
+- Use shadcn/ui Table components
+- Implement loading skeletons
+- Include proper pagination
+- Add search and filter functionality
+
+### Form Patterns (for future implementation)
+- Use React Hook Form + Zod for validation
+- Implement proper error states
+- Include loading states for form submission
+
+## Security Guidelines
+
+### API Security
+- Validate all inputs in API routes
+- Use proper HTTP status codes
+- Sanitize data before processing
+
+### Client Security
+- Never expose sensitive data in client code
+- Use proper authentication checks
+- Validate user permissions
+
+## Testing Guidelines (for future implementation)
+
+### Component Testing
+- Test user interactions
+- Test loading and error states
+- Test internationalization
+
+### API Testing
+- Test all CRUD operations
+- Test error scenarios
+- Test pagination and filtering
+
+## Deployment Considerations
+
+### Environment Variables
+- Use `.env.local` for local development
+- Never commit sensitive data
+- Document required environment variables
+
+### Build Optimization
+- Ensure all TypeScript errors are resolved
+- Test in both development and production modes
+- Verify responsive design works correctly
+
+## Common Patterns to Follow
+
+### Conditional Rendering
+```typescript
+{condition && <ComponentToRender />}
+{condition ? <ComponentA /> : <ComponentB />}
+```
+
+### Event Handlers
+```typescript
+const handleClick = (param: string) => {
+  // Handle event
+};
+
+<Button onClick={() => handleClick(value)}>
+```
+
+### State Updates
+```typescript
+// For objects
+setState(prev => ({ ...prev, key: newValue }));
+
+// For arrays
+setItems(prev => [...prev, newItem]);
+```
+
+## Future Development Notes
+
+### Ready for Implementation
+- Complete CRUD operations for all entities
+- File upload functionality
+- Advanced search and filtering
+- Real authentication with NextAuth.js
+- Database integration
+- Email notifications
+
+### Architecture Decisions
+- Mock APIs are structured to match real backend patterns
+- Context providers are separated by concern
+- Component structure supports easy testing
+- Translation system supports easy language addition
+
+## Best Practices Summary
+
+1. **Consistency**: Follow established patterns throughout the codebase
+2. **Type Safety**: Use TypeScript strictly, define proper types
+3. **Internationalization**: Always use translation keys, never hardcode text
+4. **Responsive**: Design mobile-first, test on all screen sizes
+5. **Performance**: Optimize loading states, minimize bundle size
+6. **User Experience**: Provide feedback, handle errors gracefully
+7. **Maintainability**: Write clean, documented code with proper separation of concerns
+8. **Accessibility**: Use semantic HTML, proper ARIA labels (when needed)
+
+Remember: This is a professional admin dashboard that will be used by real users. Prioritize user experience, performance, and maintainability in all development decisions. 
